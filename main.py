@@ -109,8 +109,6 @@ def main(argv: Sequence[str] | None = None):
     if args.create_players:
         create_sleeper_player_data()
 
-    # league_id = 784479542935990272
-    # user_id = 590283383364423680
     league_id = os.environ['LEAGUE_ID']
     user_id = os.environ['USER_ID']
 
