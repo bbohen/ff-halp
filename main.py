@@ -148,7 +148,6 @@ def get_ff_pro_rankings(position: str, week: int):
             "position": position,
             "scoring": "HALF",
             "type": "weekly",
-            # TODO: Week should be dynamic, use sleeper state endpoint?
             "week": week,
         },
         headers={"x-api-key": os.environ["FF_PROS_API_KEY"]},
@@ -174,9 +173,6 @@ def get_data_for_player(
         "TE": te_ff_pro_rankings,
         "K": k_ff_pro_rankings,
     }
-
-    # with open('players.json', 'r') as player_file:
-    #     player_json = json.load(player_file)
 
     player_data = player_json[player_id]
 
@@ -243,11 +239,14 @@ def get_roster_from_sleeper(
 
 def main(argv: Sequence[str] | None = None):
     parser = argparse.ArgumentParser()
-    # Add arguments here
     parser.add_argument(
         "--create-players",
         action="store_true",
         help="Create JSON file filled with Sleeper player data",
+    )
+    parser.add_argument(
+        "--week",
+        help="Week of the NFL season to analyze",
     )
     args = parser.parse_args(argv)
 
@@ -258,19 +257,20 @@ def main(argv: Sequence[str] | None = None):
     user_id = os.environ["USER_ID"]
 
     nfl_state = get_nfl_state()
+    week = args.week or nfl_state['week']
 
     print('------------')
-    print(f'Halping out with week {nfl_state["week"]}')
+    print(f'Halping out with week {week}')
     print('------')
     print('Do any lineup adjustments need to made?')
     print('------')
 
     # TODO: Evaluate if this could be made in 1 request via a superflex filter
-    qb_ff_pro_rankings = get_ff_pro_rankings("QB", nfl_state["week"])
-    rb_ff_pro_rankings = get_ff_pro_rankings("RB", nfl_state["week"])
-    wr_ff_pro_rankings = get_ff_pro_rankings("WR", nfl_state["week"])
-    te_ff_pro_rankings = get_ff_pro_rankings("TE", nfl_state["week"])
-    k_ff_pro_rankings = get_ff_pro_rankings("K", nfl_state["week"])
+    qb_ff_pro_rankings = get_ff_pro_rankings("QB", week)
+    rb_ff_pro_rankings = get_ff_pro_rankings("RB", week)
+    wr_ff_pro_rankings = get_ff_pro_rankings("WR", week)
+    te_ff_pro_rankings = get_ff_pro_rankings("TE", week)
+    k_ff_pro_rankings = get_ff_pro_rankings("K", week)
 
     with open("players.json", "r") as player_file:
         player_json = json.load(player_file)
