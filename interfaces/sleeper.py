@@ -3,6 +3,11 @@ import os.path
 
 import requests
 
+# Somehow Sleeper will return dupes for players that end up in players.json.
+# TODO: Can this be automated or removed somehow?
+DUPLICATE_SLEEPER_PLAYERS = [
+    '4510' # Najee Harris
+]
 
 def create_sleeper_player_data_file():
     print("Creating player data!")

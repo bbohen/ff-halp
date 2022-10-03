@@ -1,6 +1,6 @@
 import json
 
-from interfaces.sleeper import get_rosters_for_league
+from interfaces.sleeper import DUPLICATE_SLEEPER_PLAYERS, get_rosters_for_league
 
 
 def check_sleeper_roster_against_available_players(sleeper_roster, available_players):
@@ -82,12 +82,12 @@ def get_available_players_in_sleeper(
     for roster in rosters:
         for player in roster["players"]:
             taken_players.append(player)
-
+    
     with open("players.json", "r") as player_file:
         all_sleeper_players = json.load(player_file)
 
     for player_id, player_data in all_sleeper_players.items():
-        if player_id not in taken_players:
+        if player_id not in taken_players and player_id not in DUPLICATE_SLEEPER_PLAYERS:
             try:
                 available_players.append(
                     get_data_for_player(
