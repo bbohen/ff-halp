@@ -24,6 +24,11 @@ from interfaces.sleeper import (
 #   - Support running this for all teams a user owns in sleeper
 #   - Support Yahoo
 
+# TODO:
+#   - Fix players missing due to names being inconsistent between platforms
+#   - Fancy colors or a more useful output of data
+#   - Maybe use dataclasses?
+
 
 def main(argv: Sequence[str] | None = None):
     parser = argparse.ArgumentParser()

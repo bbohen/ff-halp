@@ -28,7 +28,7 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 < player["ff_pro_data"]["rank_ecr"]
             ):
                 print(
-                    f'Available player {available_player["full_name"]} is higher ranked than rostered player: {player["full_name"]}'
+                    f'Available player {available_player["full_name"]}({available_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than rostered player: {player["full_name"]}({player["ff_pro_data"]["rank_ecr"]})'
                 )
 
 
@@ -44,9 +44,6 @@ def check_sleeper_roster_for_position(sleeper_roster, position):
     bench_players_for_position = [
         player for player in players_for_position if player not in starters_for_position
     ]
-
-    print(f"{len(starters_for_position)} starters at {position}")
-    print(f"{len(bench_players_for_position)} bench players at {position}")
 
     for starter in starters_for_position:
         if not starter.get("ff_pro_data", None):
@@ -65,7 +62,7 @@ def check_sleeper_roster_for_position(sleeper_roster, position):
                 < starter["ff_pro_data"]["rank_ecr"]
             ):
                 print(
-                    f'Bench player {bench_player["full_name"]} is higher ranked than starter: {starter["full_name"]}'
+                    f'Bench player {bench_player["full_name"]}({bench_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than starter: {starter["full_name"]}({starter["ff_pro_data"]["rank_ecr"]})'
                 )
 
 
