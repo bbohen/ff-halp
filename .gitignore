@@ -1,2 +1,3 @@
 .env
 players.json
+/__pycache__

@@ -1,0 +1,186 @@
+import json
+
+from interfaces.sleeper import get_rosters_for_league
+
+
+def check_sleeper_roster_against_available_players(sleeper_roster, available_players):
+    for player in sleeper_roster["players"]:
+        if not player.get("full_name"):
+            # TODO: Support defenses
+            continue
+
+        if not player.get("ff_pro_data"):
+            print(f'{player["full_name"]} has no matching data in FantasyPros!')
+            continue
+
+        for available_player in available_players:
+            if available_player["position"] != player["position"]:
+                continue
+
+            if not available_player.get("ff_pro_data", None):
+                # TODO: Monitor this? Retry? Eh?
+                #       Seems to happen a lot with lesser known players
+                # print(f'{available_player["full_name"]} has no matching data in FantasyPros!')
+                continue
+
+            if (
+                available_player["ff_pro_data"]["rank_ecr"]
+                < player["ff_pro_data"]["rank_ecr"]
+            ):
+                print(
+                    f'Available player {available_player["full_name"]} is higher ranked than rostered player: {player["full_name"]}'
+                )
+
+
+def check_sleeper_roster_for_position(sleeper_roster, position):
+    starters_for_position = [
+        player
+        for player in sleeper_roster["starters"]
+        if player["position"] == position
+    ]
+    players_for_position = [
+        player for player in sleeper_roster["players"] if player["position"] == position
+    ]
+    bench_players_for_position = [
+        player for player in players_for_position if player not in starters_for_position
+    ]
+
+    print(f"{len(starters_for_position)} starters at {position}")
+    print(f"{len(bench_players_for_position)} bench players at {position}")
+
+    for starter in starters_for_position:
+        if not starter.get("ff_pro_data", None):
+            print(f'{starter["full_name"]} has no matching data in FantasyPros!')
+            continue
+
+        for bench_player in bench_players_for_position:
+            if not bench_player.get("ff_pro_data", None):
+                print(
+                    f'{bench_player["full_name"]} has no matching data in FantasyPros!'
+                )
+                continue
+
+            if (
+                bench_player["ff_pro_data"]["rank_ecr"]
+                < starter["ff_pro_data"]["rank_ecr"]
+            ):
+                print(
+                    f'Bench player {bench_player["full_name"]} is higher ranked than starter: {starter["full_name"]}'
+                )
+
+
+def get_available_players_in_sleeper(
+    league_id: str,
+    qb_ff_pro_rankings,
+    rb_ff_pro_rankings,
+    wr_ff_pro_rankings,
+    te_ff_pro_rankings,
+    k_ff_pro_rankings,
+):
+    available_players = []
+    taken_players = []
+
+    rosters = get_rosters_for_league(league_id)
+
+    for roster in rosters:
+        for player in roster["players"]:
+            taken_players.append(player)
+
+    with open("players.json", "r") as player_file:
+        all_sleeper_players = json.load(player_file)
+
+    for player_id, player_data in all_sleeper_players.items():
+        if player_id not in taken_players:
+            try:
+                available_players.append(
+                    get_data_for_player(
+                        player_id,
+                        all_sleeper_players,
+                        qb_ff_pro_rankings,
+                        rb_ff_pro_rankings,
+                        wr_ff_pro_rankings,
+                        te_ff_pro_rankings,
+                        k_ff_pro_rankings,
+                    )
+                )
+            except KeyError:
+                # Likely an supported position like OL
+                continue
+
+    return available_players
+
+
+def get_data_for_player(
+    player_id: int,
+    player_json,
+    qb_ff_pro_rankings,
+    rb_ff_pro_rankings,
+    wr_ff_pro_rankings,
+    te_ff_pro_rankings,
+    k_ff_pro_rankings,
+):
+    ff_pro_data_ranking_map = {
+        "QB": qb_ff_pro_rankings,
+        "RB": rb_ff_pro_rankings,
+        "WR": wr_ff_pro_rankings,
+        "TE": te_ff_pro_rankings,
+        "K": k_ff_pro_rankings,
+    }
+
+    player_data = player_json[player_id]
+
+    if player_data.get("full_name", None):
+        player_data["ff_pro_data"] = next(
+            (
+                x
+                for x in ff_pro_data_ranking_map[player_data["position"]]
+                if x["player_name"] in player_data["full_name"]
+                or player_data["full_name"] in x["player_name"]
+            ),
+            None,
+        )
+    else:
+        # TODO: Add support for defense
+        pass
+
+    return player_data
+
+
+def get_roster_from_sleeper(
+    league_id: str,
+    user_id: str,
+    player_json,
+    qb_ff_pro_rankings,
+    rb_ff_pro_rankings,
+    wr_ff_pro_rankings,
+    te_ff_pro_rankings,
+    k_ff_pro_rankings,
+):
+    rosters = get_rosters_for_league(league_id)
+
+    user_roster = next(x for x in rosters if x["owner_id"] == user_id)
+    user_roster["players"] = [
+        get_data_for_player(
+            player_id,
+            player_json,
+            qb_ff_pro_rankings,
+            rb_ff_pro_rankings,
+            wr_ff_pro_rankings,
+            te_ff_pro_rankings,
+            k_ff_pro_rankings,
+        )
+        for player_id in user_roster["players"]
+    ]
+    user_roster["starters"] = [
+        get_data_for_player(
+            player_id,
+            player_json,
+            qb_ff_pro_rankings,
+            rb_ff_pro_rankings,
+            wr_ff_pro_rankings,
+            te_ff_pro_rankings,
+            k_ff_pro_rankings,
+        )
+        for player_id in user_roster["starters"]
+    ]
+    return user_roster
