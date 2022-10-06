@@ -1,6 +1,6 @@
 import json
 
-from interfaces.sleeper import DUPLICATE_SLEEPER_PLAYERS, get_rosters_for_league
+from interfaces.sleeper import get_rosters_for_league
 
 
 def check_sleeper_roster_against_available_players(sleeper_roster, available_players):
@@ -27,6 +27,9 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 available_player["ff_pro_data"]["rank_ecr"]
                 < player["ff_pro_data"]["rank_ecr"]
             ):
+                if available_player['status'] == 'Inactive' or available_player['active'] == False:
+                    continue
+
                 print(
                     f'Available player {available_player["full_name"]}({available_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than rostered player: {player["full_name"]}({player["ff_pro_data"]["rank_ecr"]})'
                 )
@@ -44,6 +47,8 @@ def check_sleeper_roster_for_position(sleeper_roster, position):
     bench_players_for_position = [
         player for player in players_for_position if player not in starters_for_position
     ]
+
+    print(f'--- {position}')
 
     for starter in starters_for_position:
         if not starter.get("ff_pro_data", None):
@@ -80,14 +85,15 @@ def get_available_players_in_sleeper(
     rosters = get_rosters_for_league(league_id)
 
     for roster in rosters:
-        for player in roster["players"]:
-            taken_players.append(player)
+        if roster.get("players") is not None:
+            for player in roster["players"]:
+                taken_players.append(player)
     
     with open("players.json", "r") as player_file:
         all_sleeper_players = json.load(player_file)
 
     for player_id, player_data in all_sleeper_players.items():
-        if player_id not in taken_players and player_id not in DUPLICATE_SLEEPER_PLAYERS:
+        if player_id not in taken_players:
             try:
                 available_players.append(
                     get_data_for_player(

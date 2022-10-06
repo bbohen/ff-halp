@@ -20,12 +20,13 @@ from interfaces.sleeper import (
 # Objective:
 #   - ✅ Tell user if they should make changes to their lineup based on fantasy pros
 #   - ✅ Tell user if there are higher ranked available players based on fantasy pros
+#   - ✅ Support multiple sleeper leagues
 #   - Support defenses
-#   - Support running this for all teams a user owns in sleeper
 #   - Support Yahoo
 
 # TODO:
-#   - Fix players missing due to names being inconsistent between platforms
+#   - Better handling of duplicate players in Sleeper's system
+#       - Any way to tell from the record if it shouldn't be used?
 #   - Fancy colors or a more useful output of data
 #   - Maybe use dataclasses?
 
@@ -46,7 +47,7 @@ def main(argv: Sequence[str] | None = None):
     if args.create_players:
         create_sleeper_player_data_file()
 
-    league_id = os.environ["LEAGUE_ID"]
+    league_ids = json.loads(os.environ["LEAGUE_IDS"])
     user_id = os.environ["USER_ID"]
 
     nfl_state = get_nfl_state()
@@ -54,9 +55,6 @@ def main(argv: Sequence[str] | None = None):
 
     print("------------")
     print(f"Halping out with week {week}")
-    print("------")
-    print("Do any lineup adjustments need to made?")
-    print("------")
 
     qb_ff_pro_rankings = get_ff_pro_rankings("QB", week)
     rb_ff_pro_rankings = get_ff_pro_rankings("RB", week)
@@ -67,36 +65,43 @@ def main(argv: Sequence[str] | None = None):
     with open("players.json", "r") as player_file:
         player_json = json.load(player_file)
 
-    sleeper_roster = get_roster_from_sleeper(
-        str(league_id),
-        str(user_id),
-        player_json,
-        qb_ff_pro_rankings,
-        rb_ff_pro_rankings,
-        wr_ff_pro_rankings,
-        te_ff_pro_rankings,
-        k_ff_pro_rankings,
-    )
+    for league_id in league_ids:
 
-    check_sleeper_roster_for_position(sleeper_roster, "QB")
-    check_sleeper_roster_for_position(sleeper_roster, "RB")
-    check_sleeper_roster_for_position(sleeper_roster, "WR")
-    check_sleeper_roster_for_position(sleeper_roster, "TE")
-    check_sleeper_roster_for_position(sleeper_roster, "K")
+        sleeper_roster = get_roster_from_sleeper(
+            str(league_id),
+            str(user_id),
+            player_json,
+            qb_ff_pro_rankings,
+            rb_ff_pro_rankings,
+            wr_ff_pro_rankings,
+            te_ff_pro_rankings,
+            k_ff_pro_rankings,
+        )
 
-    available_players = get_available_players_in_sleeper(
-        league_id,
-        qb_ff_pro_rankings,
-        rb_ff_pro_rankings,
-        wr_ff_pro_rankings,
-        te_ff_pro_rankings,
-        k_ff_pro_rankings,
-    )
+        print("------")
+        print(f"Do any lineup adjustments need to made for {league_id}?")
+        print("------")
 
-    print("------")
-    print("Any better available players out there?")
-    print("------")
-    check_sleeper_roster_against_available_players(sleeper_roster, available_players)
+        check_sleeper_roster_for_position(sleeper_roster, "QB")
+        check_sleeper_roster_for_position(sleeper_roster, "RB")
+        check_sleeper_roster_for_position(sleeper_roster, "WR")
+        check_sleeper_roster_for_position(sleeper_roster, "TE")
+        check_sleeper_roster_for_position(sleeper_roster, "K")
+
+        available_players = get_available_players_in_sleeper(
+            league_id,
+            qb_ff_pro_rankings,
+            rb_ff_pro_rankings,
+            wr_ff_pro_rankings,
+            te_ff_pro_rankings,
+            k_ff_pro_rankings,
+        )
+
+        print("------")
+        print(f"Any better available players out there for {league_id}?")
+        print("------")
+        check_sleeper_roster_against_available_players(sleeper_roster, available_players)
+
     print("------------")
 
 
