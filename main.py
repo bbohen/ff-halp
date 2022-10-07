@@ -21,7 +21,7 @@ from interfaces.sleeper import (
 #   - ✅ Tell user if they should make changes to their lineup based on fantasy pros
 #   - ✅ Tell user if there are higher ranked available players based on fantasy pros
 #   - ✅ Support multiple sleeper leagues
-#   - Support defenses
+#   - ✅ Support defenses
 #   - Support Yahoo
 
 # TODO:
@@ -61,6 +61,7 @@ def main(argv: Sequence[str] | None = None):
     wr_ff_pro_rankings = get_ff_pro_rankings("WR", week)
     te_ff_pro_rankings = get_ff_pro_rankings("TE", week)
     k_ff_pro_rankings = get_ff_pro_rankings("K", week)
+    def_ff_pro_rankings = get_ff_pro_rankings("DST", week)
 
     with open("players.json", "r") as player_file:
         player_json = json.load(player_file)
@@ -76,6 +77,7 @@ def main(argv: Sequence[str] | None = None):
             wr_ff_pro_rankings,
             te_ff_pro_rankings,
             k_ff_pro_rankings,
+            def_ff_pro_rankings,
         )
 
         print("------")
@@ -87,6 +89,7 @@ def main(argv: Sequence[str] | None = None):
         check_sleeper_roster_for_position(sleeper_roster, "WR")
         check_sleeper_roster_for_position(sleeper_roster, "TE")
         check_sleeper_roster_for_position(sleeper_roster, "K")
+        check_sleeper_roster_for_position(sleeper_roster, "DEF")
 
         available_players = get_available_players_in_sleeper(
             league_id,
@@ -95,12 +98,15 @@ def main(argv: Sequence[str] | None = None):
             wr_ff_pro_rankings,
             te_ff_pro_rankings,
             k_ff_pro_rankings,
+            def_ff_pro_rankings,
         )
 
         print("------")
         print(f"Any better available players out there for {league_id}?")
         print("------")
-        check_sleeper_roster_against_available_players(sleeper_roster, available_players)
+        check_sleeper_roster_against_available_players(
+            sleeper_roster, available_players
+        )
 
     print("------------")
 

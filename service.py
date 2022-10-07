@@ -5,15 +5,13 @@ from interfaces.sleeper import get_rosters_for_league
 
 def check_sleeper_roster_against_available_players(sleeper_roster, available_players):
     for player in sleeper_roster["players"]:
-        if not player.get("full_name"):
-            # TODO: Support defenses
-            continue
 
         if not player.get("ff_pro_data"):
             print(f'{player["full_name"]} has no matching data in FantasyPros!')
             continue
 
         for available_player in available_players:
+
             if available_player["position"] != player["position"]:
                 continue
 
@@ -27,12 +25,20 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 available_player["ff_pro_data"]["rank_ecr"]
                 < player["ff_pro_data"]["rank_ecr"]
             ):
-                if available_player['status'] == 'Inactive' or available_player['active'] == False:
+                if (
+                    available_player.get("status") == "Inactive"
+                    or available_player["active"] == False
+                ):
                     continue
 
-                print(
-                    f'Available player {available_player["full_name"]}({available_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than rostered player: {player["full_name"]}({player["ff_pro_data"]["rank_ecr"]})'
-                )
+                if available_player.get("position") == "DEF":
+                    print(
+                        f'Available defense {available_player["team"]}({available_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than rostered defense: {player["team"]}({player["ff_pro_data"]["rank_ecr"]})'
+                    )
+                else:
+                    print(
+                        f'Available player {available_player["full_name"]}({available_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than rostered player: {player["full_name"]}({player["ff_pro_data"]["rank_ecr"]})'
+                    )
 
 
 def check_sleeper_roster_for_position(sleeper_roster, position):
@@ -48,7 +54,7 @@ def check_sleeper_roster_for_position(sleeper_roster, position):
         player for player in players_for_position if player not in starters_for_position
     ]
 
-    print(f'--- {position}')
+    print(f"--- {position}")
 
     for starter in starters_for_position:
         if not starter.get("ff_pro_data", None):
@@ -78,6 +84,7 @@ def get_available_players_in_sleeper(
     wr_ff_pro_rankings,
     te_ff_pro_rankings,
     k_ff_pro_rankings,
+    def_ff_pro_rankings,
 ):
     available_players = []
     taken_players = []
@@ -88,7 +95,7 @@ def get_available_players_in_sleeper(
         if roster.get("players") is not None:
             for player in roster["players"]:
                 taken_players.append(player)
-    
+
     with open("players.json", "r") as player_file:
         all_sleeper_players = json.load(player_file)
 
@@ -104,6 +111,7 @@ def get_available_players_in_sleeper(
                         wr_ff_pro_rankings,
                         te_ff_pro_rankings,
                         k_ff_pro_rankings,
+                        def_ff_pro_rankings,
                     )
                 )
             except KeyError:
@@ -121,6 +129,7 @@ def get_data_for_player(
     wr_ff_pro_rankings,
     te_ff_pro_rankings,
     k_ff_pro_rankings,
+    def_ff_pro_rankings,
 ):
     ff_pro_data_ranking_map = {
         "QB": qb_ff_pro_rankings,
@@ -128,6 +137,7 @@ def get_data_for_player(
         "WR": wr_ff_pro_rankings,
         "TE": te_ff_pro_rankings,
         "K": k_ff_pro_rankings,
+        "DEF": def_ff_pro_rankings,
     }
 
     player_data = player_json[player_id]
@@ -142,10 +152,19 @@ def get_data_for_player(
             ),
             None,
         )
-    else:
-        # TODO: Add support for defense
+    elif player_data.get("position") == "DEF":
+        player_data["ff_pro_data"] = next(
+            (
+                x
+                for x in ff_pro_data_ranking_map[player_data["position"]]
+                if x["player_team_id"] in player_data["team"]
+            ),
+            None,
+        )
         pass
-
+    else:
+        print("Not a defense or a player?")
+        pass
     return player_data
 
 
@@ -158,6 +177,7 @@ def get_roster_from_sleeper(
     wr_ff_pro_rankings,
     te_ff_pro_rankings,
     k_ff_pro_rankings,
+    def_ff_pro_rankings,
 ):
     rosters = get_rosters_for_league(league_id)
 
@@ -171,6 +191,7 @@ def get_roster_from_sleeper(
             wr_ff_pro_rankings,
             te_ff_pro_rankings,
             k_ff_pro_rankings,
+            def_ff_pro_rankings,
         )
         for player_id in user_roster["players"]
     ]
@@ -183,6 +204,7 @@ def get_roster_from_sleeper(
             wr_ff_pro_rankings,
             te_ff_pro_rankings,
             k_ff_pro_rankings,
+            def_ff_pro_rankings,
         )
         for player_id in user_roster["starters"]
     ]
