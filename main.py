@@ -28,6 +28,7 @@ from interfaces.sleeper import (
 #   - Better handling of duplicate players in Sleeper's system
 #       - Any way to tell from the record if it shouldn't be used?
 #   - Fancy colors or a more useful output of data
+#   - Better typing
 #   - Maybe use dataclasses?
 
 
@@ -56,12 +57,14 @@ def main(argv: Sequence[str] | None = None):
     print("------------")
     print(f"Halping out with week {week}")
 
-    qb_ff_pro_rankings = get_ff_pro_rankings("QB", week)
-    rb_ff_pro_rankings = get_ff_pro_rankings("RB", week)
-    wr_ff_pro_rankings = get_ff_pro_rankings("WR", week)
-    te_ff_pro_rankings = get_ff_pro_rankings("TE", week)
-    k_ff_pro_rankings = get_ff_pro_rankings("K", week)
-    def_ff_pro_rankings = get_ff_pro_rankings("DST", week)
+    ff_pro_rankings_map = {
+        "QB": get_ff_pro_rankings("QB", week),
+        "RB": get_ff_pro_rankings("RB", week),
+        "WR": get_ff_pro_rankings("WR", week),
+        "TE": get_ff_pro_rankings("TE", week),
+        "K": get_ff_pro_rankings("K", week),
+        "DEF": get_ff_pro_rankings("DST", week),
+    }
 
     with open("players.json", "r") as player_file:
         player_json = json.load(player_file)
@@ -72,12 +75,7 @@ def main(argv: Sequence[str] | None = None):
             str(league_id),
             str(user_id),
             player_json,
-            qb_ff_pro_rankings,
-            rb_ff_pro_rankings,
-            wr_ff_pro_rankings,
-            te_ff_pro_rankings,
-            k_ff_pro_rankings,
-            def_ff_pro_rankings,
+            ff_pro_rankings_map,
         )
 
         print("------")
@@ -93,12 +91,7 @@ def main(argv: Sequence[str] | None = None):
 
         available_players = get_available_players_in_sleeper(
             league_id,
-            qb_ff_pro_rankings,
-            rb_ff_pro_rankings,
-            wr_ff_pro_rankings,
-            te_ff_pro_rankings,
-            k_ff_pro_rankings,
-            def_ff_pro_rankings,
+            ff_pro_rankings_map,
         )
 
         print("------")

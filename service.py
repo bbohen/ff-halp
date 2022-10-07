@@ -36,11 +36,14 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 player["higher_rated_players"].append(available_player)
 
         if len(player["higher_rated_players"]):
-            players_sorted_by_rank = sorted(player["higher_rated_players"], key=lambda d: d["ff_pro_data"]["rank_ecr"]) 
+            players_sorted_by_rank = sorted(
+                player["higher_rated_players"],
+                key=lambda d: d["ff_pro_data"]["rank_ecr"],
+            )
 
             if player.get("position") == "DEF":
                 print(
-                    f"--- There are {len(player['higher_rated_players'])} higher rated defenses available than {player['team']}({player['ff_pro_data']['rank_ecr']})"
+                    f"--- There are {len(player['higher_rated_players'])} available defenses ranked higher than {player['team']}({player['ff_pro_data']['rank_ecr']})"
                 )
                 for higher_rated_player in players_sorted_by_rank:
                     print(
@@ -48,7 +51,7 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                     )
             else:
                 print(
-                    f"--- There are {len(player['higher_rated_players'])} higher rated players available than {player['full_name']}({player['ff_pro_data']['rank_ecr']})"
+                    f"--- There are {len(player['higher_rated_players'])} available players ranked higher than {player['full_name']}({player['ff_pro_data']['rank_ecr']})"
                 )
                 for higher_rated_player in players_sorted_by_rank:
                     print(
@@ -92,15 +95,7 @@ def check_sleeper_roster_for_position(sleeper_roster, position):
                 )
 
 
-def get_available_players_in_sleeper(
-    league_id: str,
-    qb_ff_pro_rankings,
-    rb_ff_pro_rankings,
-    wr_ff_pro_rankings,
-    te_ff_pro_rankings,
-    k_ff_pro_rankings,
-    def_ff_pro_rankings,
-):
+def get_available_players_in_sleeper(league_id: str, ff_pro_rankings_map):
     available_players = []
     taken_players = []
 
@@ -121,12 +116,7 @@ def get_available_players_in_sleeper(
                     get_data_for_player(
                         player_id,
                         all_sleeper_players,
-                        qb_ff_pro_rankings,
-                        rb_ff_pro_rankings,
-                        wr_ff_pro_rankings,
-                        te_ff_pro_rankings,
-                        k_ff_pro_rankings,
-                        def_ff_pro_rankings,
+                        ff_pro_rankings_map,
                     )
                 )
             except KeyError:
@@ -139,29 +129,15 @@ def get_available_players_in_sleeper(
 def get_data_for_player(
     player_id: int,
     player_json,
-    qb_ff_pro_rankings,
-    rb_ff_pro_rankings,
-    wr_ff_pro_rankings,
-    te_ff_pro_rankings,
-    k_ff_pro_rankings,
-    def_ff_pro_rankings,
+    ff_pro_rankings_map,
 ):
-    ff_pro_data_ranking_map = {
-        "QB": qb_ff_pro_rankings,
-        "RB": rb_ff_pro_rankings,
-        "WR": wr_ff_pro_rankings,
-        "TE": te_ff_pro_rankings,
-        "K": k_ff_pro_rankings,
-        "DEF": def_ff_pro_rankings,
-    }
-
     player_data = player_json[player_id]
 
     if player_data.get("full_name", None):
         player_data["ff_pro_data"] = next(
             (
                 x
-                for x in ff_pro_data_ranking_map[player_data["position"]]
+                for x in ff_pro_rankings_map[player_data["position"]]
                 if x["player_name"] in player_data["full_name"]
                 or player_data["full_name"] in x["player_name"]
             ),
@@ -171,7 +147,7 @@ def get_data_for_player(
         player_data["ff_pro_data"] = next(
             (
                 x
-                for x in ff_pro_data_ranking_map[player_data["position"]]
+                for x in ff_pro_rankings_map[player_data["position"]]
                 if x["player_team_id"] in player_data["team"]
             ),
             None,
@@ -187,12 +163,7 @@ def get_roster_from_sleeper(
     league_id: str,
     user_id: str,
     player_json,
-    qb_ff_pro_rankings,
-    rb_ff_pro_rankings,
-    wr_ff_pro_rankings,
-    te_ff_pro_rankings,
-    k_ff_pro_rankings,
-    def_ff_pro_rankings,
+    ff_pro_rankings_map,
 ):
     rosters = get_rosters_for_league(league_id)
 
@@ -201,12 +172,7 @@ def get_roster_from_sleeper(
         get_data_for_player(
             player_id,
             player_json,
-            qb_ff_pro_rankings,
-            rb_ff_pro_rankings,
-            wr_ff_pro_rankings,
-            te_ff_pro_rankings,
-            k_ff_pro_rankings,
-            def_ff_pro_rankings,
+            ff_pro_rankings_map,
         )
         for player_id in user_roster["players"]
     ]
@@ -214,12 +180,7 @@ def get_roster_from_sleeper(
         get_data_for_player(
             player_id,
             player_json,
-            qb_ff_pro_rankings,
-            rb_ff_pro_rankings,
-            wr_ff_pro_rankings,
-            te_ff_pro_rankings,
-            k_ff_pro_rankings,
-            def_ff_pro_rankings,
+            ff_pro_rankings_map,
         )
         for player_id in user_roster["starters"]
     ]
