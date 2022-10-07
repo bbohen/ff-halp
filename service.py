@@ -6,6 +6,8 @@ from interfaces.sleeper import get_rosters_for_league
 def check_sleeper_roster_against_available_players(sleeper_roster, available_players):
     for player in sleeper_roster["players"]:
 
+        player["higher_rated_players"] = []
+
         if not player.get("ff_pro_data"):
             print(f'{player["full_name"]} has no matching data in FantasyPros!')
             continue
@@ -31,13 +33,24 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 ):
                     continue
 
-                if available_player.get("position") == "DEF":
+                player["higher_rated_players"].append(available_player)
+
+        if len(player["higher_rated_players"]):
+            if player.get("position") == "DEF":
+                print(
+                    f"--- There are {len(player['higher_rated_players'])} higher rated defenses available than {player['team']}({player['ff_pro_data']['rank_ecr']})"
+                )
+                for higher_rated_player in player["higher_rated_players"]:
                     print(
-                        f'Available defense {available_player["team"]}({available_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than rostered defense: {player["team"]}({player["ff_pro_data"]["rank_ecr"]})'
+                        f'- {higher_rated_player["team"]}({higher_rated_player["ff_pro_data"]["rank_ecr"]})'
                     )
-                else:
+            else:
+                print(
+                    f"--- There are {len(player['higher_rated_players'])} higher rated players available than {player['full_name']}({player['ff_pro_data']['rank_ecr']})"
+                )
+                for higher_rated_player in player["higher_rated_players"]:
                     print(
-                        f'Available player {available_player["full_name"]}({available_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than rostered player: {player["full_name"]}({player["ff_pro_data"]["rank_ecr"]})'
+                        f'- {higher_rated_player["full_name"]}({higher_rated_player["ff_pro_data"]["rank_ecr"]})'
                     )
 
 
