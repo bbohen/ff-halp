@@ -36,11 +36,13 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 player["higher_rated_players"].append(available_player)
 
         if len(player["higher_rated_players"]):
+            players_sorted_by_rank = sorted(player["higher_rated_players"], key=lambda d: d["ff_pro_data"]["rank_ecr"]) 
+
             if player.get("position") == "DEF":
                 print(
                     f"--- There are {len(player['higher_rated_players'])} higher rated defenses available than {player['team']}({player['ff_pro_data']['rank_ecr']})"
                 )
-                for higher_rated_player in player["higher_rated_players"]:
+                for higher_rated_player in players_sorted_by_rank:
                     print(
                         f'- {higher_rated_player["team"]}({higher_rated_player["ff_pro_data"]["rank_ecr"]})'
                     )
@@ -48,7 +50,7 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 print(
                     f"--- There are {len(player['higher_rated_players'])} higher rated players available than {player['full_name']}({player['ff_pro_data']['rank_ecr']})"
                 )
-                for higher_rated_player in player["higher_rated_players"]:
+                for higher_rated_player in players_sorted_by_rank:
                     print(
                         f'- {higher_rated_player["full_name"]}({higher_rated_player["ff_pro_data"]["rank_ecr"]})'
                     )
