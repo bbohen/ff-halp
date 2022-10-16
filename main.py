@@ -55,7 +55,7 @@ def main(argv: Sequence[str] | None = None):
     week = args.week or nfl_state["week"]
 
     print("------------")
-    print(f"Halping out with week {week}")
+    print(f"Halping out with week {week}!")
 
     ff_pro_rankings_map = {
         "QB": get_ff_pro_rankings("QB", week),
@@ -70,6 +70,9 @@ def main(argv: Sequence[str] | None = None):
         player_json = json.load(player_file)
 
     for league_id in league_ids:
+        print("")
+        print("------")
+        print(f"Do any lineup adjustments need to made for {league_id}?")
 
         sleeper_roster = get_roster_from_sleeper(
             str(league_id),
@@ -77,10 +80,6 @@ def main(argv: Sequence[str] | None = None):
             player_json,
             ff_pro_rankings_map,
         )
-
-        print("------")
-        print(f"Do any lineup adjustments need to made for {league_id}?")
-        print("------")
 
         check_sleeper_roster_for_position(sleeper_roster, "QB")
         check_sleeper_roster_for_position(sleeper_roster, "RB")
@@ -96,12 +95,9 @@ def main(argv: Sequence[str] | None = None):
 
         print("------")
         print(f"Any better available players out there for {league_id}?")
-        print("------")
         check_sleeper_roster_against_available_players(
             sleeper_roster, available_players
         )
-
-    print("------------")
 
 
 if __name__ == "__main__":

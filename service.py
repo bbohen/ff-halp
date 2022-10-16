@@ -9,7 +9,7 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
         player["higher_rated_players"] = []
 
         if not player.get("ff_pro_data"):
-            print(f'{player["full_name"]} has no matching data in FantasyPros!')
+            # No FF pro data exists for this player in week X
             continue
 
         for available_player in available_players:
@@ -18,9 +18,6 @@ def check_sleeper_roster_against_available_players(sleeper_roster, available_pla
                 continue
 
             if not available_player.get("ff_pro_data", None):
-                # TODO: Monitor this? Retry? Eh?
-                #       Seems to happen a lot with lesser known players
-                # print(f'{available_player["full_name"]} has no matching data in FantasyPros!')
                 continue
 
             if (
@@ -72,24 +69,26 @@ def check_sleeper_roster_for_position(sleeper_roster, position):
         player for player in players_for_position if player not in starters_for_position
     ]
 
-    print(f"--- {position}")
-
     for starter in starters_for_position:
         if not starter.get("ff_pro_data", None):
-            print(f'{starter["full_name"]} has no matching data in FantasyPros!')
+            print(f'{starter["full_name"]} has no matching data in FantasyPros for this week but is starting!')
             continue
+
+        should_label_be_shown = True
 
         for bench_player in bench_players_for_position:
             if not bench_player.get("ff_pro_data", None):
-                print(
-                    f'{bench_player["full_name"]} has no matching data in FantasyPros!'
-                )
+                # No FF pro data exists for this player in week X
                 continue
-
+            
             if (
                 bench_player["ff_pro_data"]["rank_ecr"]
                 < starter["ff_pro_data"]["rank_ecr"]
             ):
+                if should_label_be_shown:
+                    print(f"--- {position}")
+                    should_label_be_shown = False
+
                 print(
                     f'Bench player {bench_player["full_name"]}({bench_player["ff_pro_data"]["rank_ecr"]}) is higher ranked than starter: {starter["full_name"]}({starter["ff_pro_data"]["rank_ecr"]})'
                 )
